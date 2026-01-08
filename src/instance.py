@@ -138,7 +138,7 @@ if __name__ == "__main__":
 
     print("Tests OK")
 
-    instance = read_instance("2KP200-TA-0.dat", 5, 3)
+    instance = read_instance("Data/2KP200-TA-0.dat", 5, 3)
 
     print(instance.weights)
     print(instance.values)

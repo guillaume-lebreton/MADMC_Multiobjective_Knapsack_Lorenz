@@ -6,68 +6,85 @@ Procédure en 2 phases pour déterminer l'ensemble des points Lorenz non dominé
 (2) filtrer cet ensemble de points afin de ne garder que les points Lorenz non dominés
 '''
 
-from instance import Instance, pareto_dominate, lorenz_dominate, read_instance, plot_2d_points
+from instance import pareto_dominate, lorenz_dominate, read_instance, plot_2d_points, lorenz_vector
+import numpy as np
 
-def pareto_filter(points):
+def pareto_insert(points, new):
     '''
-    Renvoie les points Pareto non dominés d'un ensemble de points
+    Insère un point (new) dans un front de Pareto (points) et le met à jour
     '''
-    result = []
+    # On vérifie déjà que le point n'est pas déjà dans le front
+    if new in points:
+        return points
+    
+    front = []
+
     for p in points:
-        if not any(pareto_dominate(q,p) for q in points if q !=p):
-            result.append(p)
-    return result
+        if pareto_dominate(p, new): #Le nouveau point est dominé -> on garde l'ancien front
+            return points
+        if not pareto_dominate(new, p): #On garde les points du front non dominé par le nouveau
+            front.append(p)
+
+    #Le nouveau point n'est dominé par aucun point du front -> on l'ajoute au front
+    front.append(new)
+
+    return front
 
 # 1ère étape : Pareto non dominés 
 
-def pareto_dp(instance):
+def pareto_dp(instance, verbose=False):
     W = instance.capacity
     p = instance.p
 
-
     # dp[w] = liste des vecteurs objectifs Pareto non dominés avec poids w
     dp = [[] for _ in range(W+1)]
-
     dp[0] = [tuple([0]*p)]
 
     for i in range(instance.n):
+        if verbose:
+            print(f"Objet {i} -> {np.sum(len(dp[w]) for w in range(W+1))} points dans la table")
 
         wi = instance.weights[i]
         vi = instance.values[i]
 
-        # On créer une copie de dp pour eviter de reprendre un objet deja pris
-        new_dp = [list(dp[w]) for w in range(W + 1)]
-
-        # Pour chaque poids où on pourati prendre l'objet
+        # Pour chaque poids où on pourrait prendre l'objet
         for w in range(W - wi, -1, -1): # implique w + wi <= W
             # pour toute les solutions pareto
             for v in dp[w]:
                 v_new = tuple(v[j] + vi[j] for j in range(p))
-                new_dp[w + wi].append(v_new)
-                new_dp[w + wi] = pareto_filter(new_dp[w + wi])
-        
-        dp = new_dp #Toute les oltuions possible avec les objet de 1 à i
+                dp[w + wi] = pareto_insert(dp[w + wi], v_new)
 
     # On filtre toute les solutions trouvées
-    all_points = []
-    for w in range(W + 1):
-        all_points.extend(dp[w])
-
-    pareto_points = pareto_filter(all_points)
+    pareto_points = []
+    for w in range(W + 1): #pour tout les poids
+        for p in dp[w]: #pour tout les point du front de ce poids
+            pareto_points = pareto_insert(pareto_points, p)
 
     return pareto_points
 
 #2ème étape : Filtre au sens de Lorenz
 
 def lorenz_filter(points):
-    result = []
-    for p in points:
-        if not any(lorenz_dominate(q,p) for q in points if q !=p):
-            result.append(p)
-    return result
+    '''
+    Filtre les points pour ne garder que les Lorenz non dominés
+    '''
+    lorenz_front = []
+    best_points = []
 
-def methode_indirect(instance):
-    pareto_points = pareto_dp(instance)
+    for p in points:
+        L = lorenz_vector(p)
+        lorenz_front = pareto_insert(lorenz_front, L)
+
+    # garder les points correspondant aux Lorenz non dominés
+    for p in points:
+        if lorenz_vector(p) in lorenz_front:
+            best_points.append(p)
+
+    return best_points
+    
+
+def methode_indirecte(instance, verbose=True):
+    pareto_points = pareto_dp(instance, verbose)
     lorenz_points = lorenz_filter(pareto_points)
     return lorenz_points
 
@@ -75,8 +92,8 @@ def methode_indirect(instance):
 if __name__ == "__main__":
 
     n = 50
-    p = 2
-    instance = read_instance("2KP200-TA-0.dat", n, p)
+    p = 4
+    instance = read_instance("Data/2KP200-TA-0.dat", n, p)
     print(f"Test sur une instance de {n} objets et {p} objectifs")
 
     pareto_points = pareto_dp(instance)
