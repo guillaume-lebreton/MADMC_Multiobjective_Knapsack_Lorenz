@@ -7,6 +7,8 @@ from direct import enumerate_lorenz
 import time
 import math
 import numpy as np
+import matplotlib.pyplot as plt
+import csv
 
 def normalize(omega):
     '''
@@ -35,7 +37,7 @@ def test_omega(instance, OMEGA):
 
     for i, omega in enumerate(OMEGA):
         t = []
-        for _ in range(3):  # on fait une moyenne 
+        for _ in range(3):  # on fait une moyenne sur 3 runs
             # print(f"{omega = }")
             start = time.perf_counter()
             dir,lor = enumerate_lorenz(instance, omega, verbose=False)
@@ -51,7 +53,7 @@ def test_omega(instance, OMEGA):
 if __name__ == "__main__":
 
     P = [2,4,6]
-    N = [[100,150,175], [25,40,50], [20,25,30]] #On prend des plus petites instance pour des p plus grand
+    N = [[120,160,200], [45,60,75], [20,30,35]] #On prend des plus petites instance pour des p plus grand
     lambdas = [0.01, 0.1, 0.25, 0.4, 0.5, 0.6, 0.75, 1]
     res = {}
 
@@ -66,7 +68,6 @@ if __name__ == "__main__":
             omega = omega_exp(p,l)
             omegas.append(omega)
             print(f"Lamba {j} = {l} -> omega = {[round(o,3) for o in omega]}")
-            print("---"*15)
         for n in N[i]:
             print("---"*15)
             print(f"{n = }")
@@ -81,6 +82,30 @@ if __name__ == "__main__":
     for p,n in res.keys():
         print(f"{p=}, {n=} -> meilleur lambda = {lambdas[np.argmin(res[p,n])]}")
 
-    #plot
+    #Plot
+    for p in P:
+        plt.figure()
+        for n in [nn for (pp,nn) in res if pp == p]:
+            times = res[p, n]
+            plt.plot(lambdas, times, marker='o', label=f"n={n}")
+
+        plt.xlabel("λ (poids exponentiel OWA)")
+        plt.ylabel("Temps de calcul (s)")
+        plt.title(f"Influence de λ sur le temps (p={p})")
+        plt.legend()
+        plt.grid(True)
+        plt.tight_layout()
+        plt.show()
+
+    # CSV
+    with open("Resultats/Omega/results_omega.csv", "w", newline="") as f:
+        writer = csv.writer(f)
+        writer.writerow(["p", "n", "lambda", "time"])
+
+        for (p, n), times in res.items():
+            for j, t in enumerate(times):
+                writer.writerow([p, n, lambdas[j], round(t,3)])
+
+
     
         

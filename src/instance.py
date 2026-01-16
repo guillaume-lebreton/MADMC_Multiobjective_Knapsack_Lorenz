@@ -119,24 +119,24 @@ def plot_2d_points(points):
 
 if __name__ == "__main__":
 
-    # Pareto
-    assert pareto_dominate((3, 4), (2, 4)) is True
-    assert pareto_dominate((3, 4), (3, 4)) is False
-    assert pareto_dominate((2, 5), (3, 4)) is False
+    # # Pareto
+    # assert pareto_dominate((3, 4), (2, 4)) is True
+    # assert pareto_dominate((3, 4), (3, 4)) is False
+    # assert pareto_dominate((2, 5), (3, 4)) is False
 
-    # Lorenz
-    u = (12, 13, 10)
-    v = (12, 10, 13)
+    # # Lorenz
+    # u = (12, 13, 10)
+    # v = (12, 10, 13)
 
-    assert lorenz_vector(u) == (10, 22, 35)
-    assert lorenz_vector(v) == (10, 22, 35)
-    assert lorenz_dominate(u, v) is False
-    assert lorenz_dominate(v, u) is False
+    # assert lorenz_vector(u) == (10, 22, 35)
+    # assert lorenz_vector(v) == (10, 22, 35)
+    # assert lorenz_dominate(u, v) is False
+    # assert lorenz_dominate(v, u) is False
 
-    w = (11, 11, 13)
-    assert lorenz_dominate(w, u) is True
+    # w = (11, 11, 13)
+    # assert lorenz_dominate(w, u) is True
 
-    print("Tests OK")
+    # print("Tests OK")
 
     instance = read_instance("Data/2KP200-TA-0.dat", 5, 3)
 

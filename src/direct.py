@@ -104,10 +104,25 @@ def enumerate_lorenz(instance, omega, verbose=True):
             z = model.addVars(p, vtype=GRB.BINARY, name=f"z_{s}")
 
             for k in range(p):
-                # k*r[k] - sum b >= (Ls[k] + 1) si z[k]=1 / relaxé grace au big M sinon
+                # k*r[k] - sum b >= (Ls[k] + 1)*z[k]
                 model.addConstr((k+1)*r[k] - gp.quicksum(b[k,i] for i in range(p)) >= (Ls[k] + 1)*z[k])
 
             model.addConstr(gp.quicksum(z[k] for k in range(p)) >= 1)
+
+        #Contraine d'amelioration avec tout les points Lorenz non dominés
+        # for s, Ls in enumerate(lorenz_vectors):
+        #     z = model.addVars(p, vtype=GRB.BINARY, name=f"z_{s}")
+
+        #     for k in range(p):
+        #         # k*r[k] - sum b >= (Ls[k] + 1)*z[k]
+        #         model.addConstr((k+1)*r[k] - gp.quicksum(b[k,i] for i in range(p)) >= Ls[k])
+            
+        #     model.addConstr(gp.quicksum(z[k] for k in range(p)) >= 1)
+            
+        # for i, ys in enumerate(objective_points):
+        #     # fi(x) >= (ys[i] + 1)*z[i]
+        #     for i in range(p):
+        #         model.addConstr( (ys[i]+1)*z[i] <= gp.quicksum(values[j][i] * x[j] for j in range(n)))
 
         model.optimize()
 
@@ -134,12 +149,13 @@ def enumerate_lorenz(instance, omega, verbose=True):
 
 if __name__ == "__main__":
 
-    n = 50
+    n = 100
     p = 3
-    omega = [0.5, 0.33, 0.17]
+    omega = [0.6, 0.3, 0.1]
 
     instance = read_instance("Data/2KP200-TA-0.dat", n, p)
     print(f"Test sur une instance de {n} objets et {p} objectifs")
+    print(f"omega : {omega}")
 
     # y=solve_owa(instance, omega)
     # print(y)

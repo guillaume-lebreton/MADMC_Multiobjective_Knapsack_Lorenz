@@ -14,7 +14,8 @@ def pareto_insert(points, new):
     Insère un point (new) dans un front de Pareto (points) et le met à jour
     '''
     # On vérifie déjà que le point n'est pas déjà dans le front
-    if new in points:
+    points_set = set(points) #plus rapide avec un set
+    if new in points_set:
         return points
     
     front = []
@@ -49,7 +50,6 @@ def pareto_dp(instance, verbose=False):
 
         # Pour chaque poids où on pourrait prendre l'objet
         for w in range(W - wi, -1, -1): # implique w + wi <= W
-            # pour toute les solutions pareto
             for v in dp[w]:
                 v_new = tuple(v[j] + vi[j] for j in range(p))
                 dp[w + wi] = pareto_insert(dp[w + wi], v_new)
@@ -57,8 +57,8 @@ def pareto_dp(instance, verbose=False):
     # On filtre toute les solutions trouvées
     pareto_points = []
     for w in range(W + 1): #pour tout les poids
-        for p in dp[w]: #pour tout les point du front de ce poids
-            pareto_points = pareto_insert(pareto_points, p)
+        for v in dp[w]:
+            pareto_points = pareto_insert(pareto_points, v)
 
     return pareto_points
 
@@ -71,36 +71,34 @@ def lorenz_filter(points):
     lorenz_front = []
     best_points = []
 
+    # construction incrémentale du front de Lorenz
     for p in points:
         L = lorenz_vector(p)
         lorenz_front = pareto_insert(lorenz_front, L)
 
-    # garder les points correspondant aux Lorenz non dominés
+    # on garde les points dont le Lorenz est dans le front
+    lorenz_set = set(lorenz_front)
     for p in points:
-        if lorenz_vector(p) in lorenz_front:
+        if lorenz_vector(p) in lorenz_set:
             best_points.append(p)
 
     return best_points
-    
 
 def methode_indirecte(instance, verbose=True):
     pareto_points = pareto_dp(instance, verbose)
     lorenz_points = lorenz_filter(pareto_points)
-    return lorenz_points
+    return pareto_points, lorenz_points
 
 # Tests
 if __name__ == "__main__":
 
-    n = 50
-    p = 4
+    n = 150
+    p = 2
     instance = read_instance("Data/2KP200-TA-0.dat", n, p)
     print(f"Test sur une instance de {n} objets et {p} objectifs")
 
-    pareto_points = pareto_dp(instance)
-    print(f"On obtient {len(pareto_points)} points Pareto non dominés")
+    pareto_points, lorenz_points = methode_indirecte(instance, verbose=True)
+    print(f"On obtient : \n - {len(pareto_points)} points Pareto non dominés")
+    print(f" - {len(lorenz_points)} points Lorenz non dominés")
     plot_2d_points(pareto_points)
-
-    lorenz_points = lorenz_filter(pareto_points)
-    print(f"On obtient {len(lorenz_points)} points Lorenz non dominés")
-    print(lorenz_points)
     plot_2d_points(lorenz_points)
