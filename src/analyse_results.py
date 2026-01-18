@@ -75,7 +75,7 @@ def plot_points_count(results):
 
 if __name__ == "__main__":
 
-    path = "Resultats/benchmark.csv"
+    path = "Resultats/comparaison.csv"
 
     results = from_csv(path)
 

@@ -33,6 +33,20 @@ def read_instance(filename, n, p):
 
     return instance
 
+def random_instance(n, p, weight_range=(1, 100), value_range=(1, 100)):
+    """
+    Génère une instance aléatoire du sac à dos multiobjectifs
+    n: nombre d'objets
+    p: nombre d'objectifs
+    """
+    weights = np.random.randint(weight_range[0], weight_range[1]+1, size=n).tolist()
+    values = [tuple(np.random.randint(value_range[0], value_range[1]+1, size=p).tolist()) for _ in range(n)]
+    capacity = sum(weights) // 2
+
+    instance = Instance(weights, values, capacity)
+
+    return instance
+
 class Instance:
     def __init__(self, weights, values, capacity):
         self.weights = weights
@@ -143,3 +157,8 @@ if __name__ == "__main__":
     print(instance.weights)
     print(instance.values)
     print("Capacité :", instance.capacity)
+
+    instance2 = random_instance(5, 3)
+    print(instance2.weights)
+    print(instance2.values)
+    print("Capacité :", instance2.capacity)
